@@ -2,7 +2,6 @@ augmentation_batch_size: 16
 augmentation_rounds: 1
 background_paths:
 - ./audioset_16k
-- ./fma
 background_paths_duplication_rate:
 - 1
 batch_n_per_class:
