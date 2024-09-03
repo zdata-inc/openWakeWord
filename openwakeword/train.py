@@ -703,7 +703,7 @@ if __name__ == '__main__':
                     input_text=target_phrase,
                     N=config["n_samples"]//len(config["target_phrase"]),
                     include_partial_phrase=1.0,
-                    include_input_words=0.2))
+                    include_input_words=0.0))
             generate_samples(text=adversarial_texts, max_samples=config["n_samples"]-n_current_samples,
                              batch_size=config["tts_batch_size"]//7,
                              noise_scales=[0.98], noise_scale_ws=[0.98], length_scales=[0.75, 1.0, 1.25],
@@ -726,7 +726,7 @@ if __name__ == '__main__':
                     input_text=target_phrase,
                     N=config["n_samples_val"]//len(config["target_phrase"]),
                     include_partial_phrase=1.0,
-                    include_input_words=0.2))
+                    include_input_words=0.0))
             generate_samples(text=adversarial_texts, max_samples=config["n_samples_val"]-n_current_samples,
                              batch_size=config["tts_batch_size"]//7,
                              noise_scales=[1.0], noise_scale_ws=[1.0], length_scales=[0.75, 1.0, 1.25],
