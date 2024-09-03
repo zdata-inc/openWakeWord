@@ -86,11 +86,12 @@ if __name__ == "__main__":
         for mdl in owwModel.prediction_buffer.keys():
             # Add scores in formatted table
             scores = list(owwModel.prediction_buffer[mdl])
-            curr_score = format(scores[-1], '.20f').replace("-", "")
+            curr_score = format(scores[-1], '.90f').replace("-", "")
 
-            output_string_header += f"""{mdl}{" "*(n_spaces - len(mdl))}   | {curr_score[0:5]} | {"--"+" "*20 if scores[-1] <= 0.5 else "Wakeword Detected!"}
-            """
-
-        # Print results table
-        print("\033[F"*(4*n_models+1))
-        print(output_string_header, "                             ", end='\r')
+        print(scores[-1])
+#            output_string_header += f"""{mdl}{" "*(n_spaces - len(mdl))}   | {curr_score[0:5]} | {"--"+" "*20 if scores[-1] <= 0.5 else "Wakeword Detected!"}
+#            """
+#
+#        # Print results table
+#        print("\033[F"*(4*n_models+1))
+#        print(output_string_header, "                             ", end='\r')
