@@ -2,6 +2,7 @@ augmentation_batch_size: 16
 augmentation_rounds: 1
 background_paths:
 - ./audioset_16k
+- ./fma
 background_paths_duplication_rate:
 - 1
 batch_n_per_class:
@@ -18,14 +19,13 @@ model_name: koda_stop
 model_type: dnn
 n_samples: 20000
 n_samples_val: 2000
-output_dir: ./my_custom_model_2
+output_dir: ./my_custom_model_5_with_fma
 piper_sample_generator_path: ./piper-sample-generator
 rir_paths:
 - ./mit_rirs
 steps: 50000
-target_accuracy: 0.6
 target_false_positives_per_hour: 0.2
 target_phrase:
 - koda stop
-target_recall: 0.25
 tts_batch_size: 50
+include_adversarial_examples: true
