@@ -618,6 +618,11 @@ if __name__ == '__main__':
         required=False
     )
     parser.add_argument(
+        '--write_augmented_clips',
+        help='Writes the augmented clips out to WAV files (instead of just numpy files) to make it easy to listen to the augmented data',
+        action='store_true',
+    )
+    parser.add_argument(
         "--overwrite",
         help="Overwrite existing openwakeword features when the --augment_clips flag is used",
         action="store_true",
@@ -759,28 +764,29 @@ if __name__ == '__main__':
                                                            batch_size=config["augmentation_batch_size"],
                                                            background_clip_paths=background_paths,
                                                            RIR_paths=rir_paths,
-                                                           augmented_clip_output_dir=Path(feature_save_dir) / 'augmented' / 'positive_train')
+                                                           augmented_clip_output_dir=Path(feature_save_dir) / 'augmented' / 'positive_train' if args.write_augmented_clips else None)
 
             positive_clips_test = [str(i) for i in Path(positive_test_output_dir).glob("*.wav")]*config["augmentation_rounds"]
             positive_clips_test_generator = augment_clips(positive_clips_test, total_length=config["total_length"],
                                                           batch_size=config["augmentation_batch_size"],
                                                           background_clip_paths=background_paths,
                                                           RIR_paths=rir_paths,
-                                                          augmented_clip_output_dir=Path(feature_save_dir) / 'augmented' / 'positive_test')
+                                                          augmented_clip_output_dir=Path(feature_save_dir) / 'augmented' / 'positive_test' if args.write_augmented_clips else None)
 
             negative_clips_train = [str(i) for i in Path(negative_train_output_dir).glob("*.wav")]*config["augmentation_rounds"]
             negative_clips_train_generator = augment_clips(negative_clips_train, total_length=config["total_length"],
                                                            batch_size=config["augmentation_batch_size"],
                                                            background_clip_paths=background_paths,
                                                            RIR_paths=rir_paths,
-                                                           augmented_clip_output_dir=Path(feature_save_dir) / 'augmented' / 'negative_train')
+                                                           augmented_clip_output_dir=Path(feature_save_dir) / 'augmented' / 'negative_train' if args.write_augmented_clips else None)
+
 
             negative_clips_test = [str(i) for i in Path(negative_test_output_dir).glob("*.wav")]*config["augmentation_rounds"]
             negative_clips_test_generator = augment_clips(negative_clips_test, total_length=config["total_length"],
                                                           batch_size=config["augmentation_batch_size"],
                                                           background_clip_paths=background_paths,
                                                           RIR_paths=rir_paths,
-                                                          augmented_clip_output_dir=Path(feature_save_dir) / 'augmented' / 'negative_test')
+                                                          augmented_clip_output_dir=Path(feature_save_dir) / 'augmented' / 'negative_test' if args.write_augmented_clips else None)
 
             # Compute features and save to disk via memmapped arrays
             logging.info("#"*50 + "\nComputing openwakeword features for generated samples\n" + "#"*50)
