@@ -21,7 +21,7 @@ from functools import partial
 from pathlib import Path
 import random
 from tqdm import tqdm
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import numpy as np
 import itertools
 import pronouncing
@@ -571,7 +571,8 @@ def augment_clips(
             "RIR": 0.5
         },
         background_clip_paths: List[str] = [],
-        RIR_paths: List[str] = []
+        RIR_paths: List[str] = [],
+        augmented_clip_output_dir: Union[str, Path, None] = None,
         ):
     """
     Applies audio augmentations to the specified audio clips, returning a generator that applies
@@ -687,6 +688,12 @@ def augment_clips(
         # Do second pass augmentations
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         augmented_batch = augment2(samples=torch.vstack(augmented_clips).unsqueeze(dim=1).to(device), sample_rate=sr).squeeze(axis=1)
+
+        if augmented_clip_output_dir is not None:
+            augmented_clip_output_dir = Path(augmented_clip_output_dir)
+            augmented_clip_output_dir.mkdir(exist_ok=True, parents=True)
+            for i, clip_path in enumerate(batch):
+                torchaudio.save(augmented_clip_output_dir / f'{Path(clip_path).name}', augmented_batch[i][None, :].to('cpu'), sr)
 
         # Do reverberation
         if augmentation_probabilities["RIR"] >= np.random.random() and RIR_paths != []:
