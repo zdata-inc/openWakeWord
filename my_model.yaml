@@ -18,13 +18,13 @@ layer_size: 32
 max_negative_weight: 1500
 model_name: koda_stop
 model_type: dnn
-n_samples: 50000
+n_samples: 100000
 n_samples_val: 2000
-output_dir: ./koda_stop_7_maxsnr-2_n-samples-50k
+output_dir: ./koda_stop_7_maxsnr-2_n-samples-100k_n-steps-100k
 piper_sample_generator_path: ./piper-sample-generator
 rir_paths:
 - ./mit_rirs
-steps: 50000
+steps: 100000
 target_false_positives_per_hour: 0.2
 target_phrase:
 - koda stop
