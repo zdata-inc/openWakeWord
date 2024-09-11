@@ -600,20 +600,21 @@ if __name__ == '__main__':
         "--training_config",
         help="The path to the training config file (required)",
         type=str,
-        required=True
+        default='my_model.yaml',
+        #required=True
     )
     parser.add_argument(
         "--generate_clips",
         help="Execute the synthetic data generation process",
         action="store_true",
-        default="False",
+        default=True,
         required=False
     )
     parser.add_argument(
         "--augment_clips",
         help="Execute the synthetic data augmentation process",
         action="store_true",
-        default="False",
+        default=True,
         required=False
     )
     parser.add_argument(
@@ -627,7 +628,7 @@ if __name__ == '__main__':
         "--train_model",
         help="Execute the model training process",
         action="store_true",
-        default="False",
+        default=True,
         required=False
     )
 

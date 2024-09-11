@@ -644,7 +644,7 @@ def augment_clips(
                 p=augmentation_probabilities["AddBackgroundNoise"],
                 background_paths=background_clip_paths,
                 min_snr_in_db=-10,
-                max_snr_in_db=15,
+                max_snr_in_db=2,
                 mode="per_batch"
             ),
             torch_audiomentations.Gain(max_gain_in_db=0, p=augmentation_probabilities["Gain"]),
