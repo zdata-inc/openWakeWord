@@ -19,10 +19,7 @@ import openwakeword
 from openwakeword.data import generate_adversarial_texts, augment_clips, mmap_batch_generator
 from openwakeword.utils import compute_features_from_generator
 from openwakeword.utils import AudioFeatures
-
-import torch
 from torch.utils.tensorboard import SummaryWriter
-writer = SummaryWriter()
 
 # Base model class for an openwakeword model
 class Model(nn.Module):
@@ -289,7 +286,7 @@ class Model(nn.Module):
         # Sequence 2
         logging.info("#"*50 + "\nStarting training sequence 2...\n" + "#"*50)
         lr = lr/10
-        run_2_3_steps = steps/10
+        run_2_3_steps = steps/5
 
         # Adjust weights as needed based on false positive per hour performance from first sequence
         if self.best_val_fp > target_fp_per_hour:
@@ -655,6 +652,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     config = yaml.load(open(args.training_config, 'r').read(), yaml.Loader)
+    writer = SummaryWriter(f'runs/{config["output_dir"]}')
 
     # imports Piper for synthetic sample generation
     sys.path.insert(0, os.path.abspath(config["piper_sample_generator_path"]))
