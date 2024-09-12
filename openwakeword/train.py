@@ -34,7 +34,6 @@ class Model(nn.Module):
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.best_models = []
         self.best_model_scores = []
-        self.best_val_fp = 1000
         self.best_val_accuracy = 0
         self.best_val_recall = 0
         self.best_train_recall = 0
@@ -288,10 +287,8 @@ class Model(nn.Module):
         lr = lr/10
         run_2_3_steps = steps/10
 
-        # Adjust weights as needed based on false positive per hour performance from first sequence
-        if self.best_val_fp > target_fp_per_hour:
-            max_negative_weight = max_negative_weight*2
-            logging.info("Increasing weight on negative examples to reduce false positives...")
+        max_negative_weight = max_negative_weight*2
+        logging.info(f"Increasing weight on negative examples to reduce false positives...")
 
         weights = np.linspace(1, max_negative_weight, int(steps)).tolist()
         val_steps = np.linspace(1, steps, 20).astype(np.int16)
@@ -309,10 +306,8 @@ class Model(nn.Module):
         logging.info("#"*50 + "\nStarting training sequence 3...\n" + "#"*50)
         lr = lr/10
 
-        # Adjust weights as needed based on false positive per hour performance from second sequence
-        if self.best_val_fp > target_fp_per_hour:
-            max_negative_weight = max_negative_weight*2
-            logging.info("Increasing weight on negative examples to reduce false positives...")
+        max_negative_weight = max_negative_weight*2
+        logging.info(f"Increasing weight on negative examples to reduce false positives...")
 
         weights = np.linspace(1, max_negative_weight, int(steps)).tolist()
         val_steps = np.linspace(1, steps, 20).astype(np.int16)
