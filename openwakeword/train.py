@@ -20,6 +20,9 @@ from openwakeword.data import generate_adversarial_texts, augment_clips, mmap_ba
 from openwakeword.utils import compute_features_from_generator
 from openwakeword.utils import AudioFeatures
 
+import torch
+from torch.utils.tensorboard import SummaryWriter
+writer = SummaryWriter()
 
 # Base model class for an openwakeword model
 class Model(nn.Module):
@@ -278,6 +281,7 @@ class Model(nn.Module):
                     X_val=X_val,
                     false_positive_val_data=false_positive_val_data,
                     max_steps=steps,
+                    overall_start_step=0,
                     negative_weight_schedule=weights,
                     val_steps=val_steps, warmup_steps=steps//5,
                     hold_steps=steps//3, lr=lr, val_set_hrs=val_set_hrs)
@@ -285,7 +289,7 @@ class Model(nn.Module):
         # Sequence 2
         logging.info("#"*50 + "\nStarting training sequence 2...\n" + "#"*50)
         lr = lr/10
-        steps = steps/10
+        run_2_3_steps = steps/10
 
         # Adjust weights as needed based on false positive per hour performance from first sequence
         if self.best_val_fp > target_fp_per_hour:
@@ -298,7 +302,8 @@ class Model(nn.Module):
                     X=X_train,
                     X_val=X_val,
                     false_positive_val_data=false_positive_val_data,
-                    max_steps=steps,
+                    max_steps=run_2_3_steps,
+                    overall_start_step=steps,
                     negative_weight_schedule=weights,
                     val_steps=val_steps, warmup_steps=steps//5,
                     hold_steps=steps//3, lr=lr, val_set_hrs=val_set_hrs)
@@ -318,7 +323,8 @@ class Model(nn.Module):
                     X=X_train,
                     X_val=X_val,
                     false_positive_val_data=false_positive_val_data,
-                    max_steps=steps,
+                    max_steps=run_2_3_steps,
+                    overall_start_step=steps + run_2_3_steps,
                     negative_weight_schedule=weights,
                     val_steps=val_steps, warmup_steps=steps//5,
                     hold_steps=steps//3, lr=lr, val_set_hrs=val_set_hrs)
@@ -431,7 +437,7 @@ class Model(nn.Module):
 
         return None
 
-    def train_model(self, X, max_steps, warmup_steps, hold_steps, X_val=None,
+    def train_model(self, X, max_steps, warmup_steps, hold_steps, overall_start_step, X_val=None,
                     false_positive_val_data=None, positive_test_clips=None,
                     negative_weight_schedule=[1],
                     val_steps=[250], lr=0.0001, val_set_hrs=1):
@@ -445,6 +451,7 @@ class Model(nn.Module):
         accumulated_predictions = torch.Tensor([]).to(self.device)
         accumulated_labels = torch.Tensor([]).to(self.device)
         for step_ndx, data in tqdm(enumerate(X, 0), total=max_steps, desc="Training"):
+            overall_step = overall_start_step + step_ndx
             # get the inputs; data is a list of [inputs, labels]
             x, y = data[0].to(self.device), data[1].to(self.device)
             y_ = y[..., None].to(torch.float32)
@@ -499,12 +506,15 @@ class Model(nn.Module):
                     accumulation_steps = 1
                     accumulated_samples = 0
 
+                    writer.add_scalar("Train/loss", loss, overall_step)
                     self.history["loss"].append(loss.detach().cpu().numpy())
 
                     # Compute training metrics and log them
                     fp = self.fp(accumulated_predictions, accumulated_labels if self.n_classes == 1 else y)
                     self.n_fp += fp
-                    self.history["recall"].append(self.recall(accumulated_predictions, accumulated_labels).detach().cpu().numpy())
+                    recall = self.recall(accumulated_predictions, accumulated_labels).detach().cpu().numpy()
+                    self.history["recall"].append(recall)
+                    writer.add_scalar("Train/recall", recall, overall_step)
 
                     accumulated_predictions = torch.Tensor([]).to(self.device)
                     accumulated_labels = torch.Tensor([]).to(self.device)
@@ -520,6 +530,7 @@ class Model(nn.Module):
                         val_fp += self.fp(val_predictions, y_val[..., None])
                 val_fp_per_hr = (val_fp/val_set_hrs).detach().cpu().numpy()
                 self.history["val_fp_per_hr"].append(val_fp_per_hr)
+                writer.add_scalar("Val/fp_per_hr", val_fp_per_hr, overall_step)
 
             # Get recall on test clips
             if step_ndx in val_steps and step_ndx > 1 and positive_test_clips is not None:
@@ -537,7 +548,9 @@ class Model(nn.Module):
                             tp += 1
                         else:
                             fn += 1
-                self.history["positive_test_clips_recall"].append(tp/(tp + fn))
+                positive_test_clips_recall = tp/(tp + fn)
+                self.history["positive_test_clips_recall"].append(positive_test_clips_recall)
+                writer.add_scalar('Val/positive_clips_recall', positive_test_clips_recall, overall_step)
 
             if step_ndx in val_steps and step_ndx > 1 and X_val is not None:
                 # Get metrics for balanced test examples of positive and negative clips
@@ -549,8 +562,11 @@ class Model(nn.Module):
                         val_acc = self.accuracy(val_predictions, y_val[..., None].to(torch.int64))
                         val_fp = self.fp(val_predictions, y_val[..., None])
                 self.history["val_accuracy"].append(val_acc.detach().cpu().numpy())
+                writer.add_scalar('Val/accuracy', val_acc, overall_step)
                 self.history["val_recall"].append(val_recall)
+                writer.add_scalar('Val/recall', val_recall, overall_step)
                 self.history["val_n_fp"].append(val_fp.detach().cpu().numpy())
+                writer.add_scalar('Val/n_fp', val_fp, overall_step)
 
             # Save models with a validation score above/below the 90th percentile
             # of the validation scores up to that point
