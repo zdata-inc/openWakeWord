@@ -286,7 +286,7 @@ class Model(nn.Module):
         # Sequence 2
         logging.info("#"*50 + "\nStarting training sequence 2...\n" + "#"*50)
         lr = lr/10
-        run_2_3_steps = steps/5
+        run_2_3_steps = steps
 
         # Adjust weights as needed based on false positive per hour performance from first sequence
         if self.best_val_fp > target_fp_per_hour:
