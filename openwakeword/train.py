@@ -24,7 +24,7 @@ from torch.utils.tensorboard import SummaryWriter
 # Base model class for an openwakeword model
 class Model(nn.Module):
     def __init__(self, n_classes=1, input_shape=(16, 96), model_type="dnn",
-                 layer_dim=128, n_blocks=4, seconds_per_example=None):
+                 layer_dim=128, n_blocks=2, seconds_per_example=None):
         super().__init__()
 
         # Store inputs as attributes
