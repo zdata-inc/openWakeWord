@@ -24,7 +24,7 @@ from torch.utils.tensorboard import SummaryWriter
 # Base model class for an openwakeword model
 class Model(nn.Module):
     def __init__(self, n_classes=1, input_shape=(16, 96), model_type="dnn",
-                 layer_dim=128, n_blocks=2, seconds_per_example=None):
+                 layer_dim=128, n_blocks=4, seconds_per_example=None):
         super().__init__()
 
         # Store inputs as attributes
@@ -837,7 +837,6 @@ if __name__ == '__main__':
 
     # Create openwakeword model
     if args.train_model is True:
-        F = openwakeword.utils.AudioFeatures(device='cpu')
         input_shape = np.load(os.path.join(feature_save_dir, "positive_features_test.npy")).shape[1:]
 
         oww = Model(n_classes=1, input_shape=input_shape, model_type=config["model_type"],
