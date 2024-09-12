@@ -287,8 +287,8 @@ class Model(nn.Module):
         lr = lr/10
         run_2_3_steps = steps/10
 
-        max_negative_weight = max_negative_weight*2
-        logging.info(f"Increasing weight on negative examples to reduce false positives...")
+        #max_negative_weight = max_negative_weight*2
+        #logging.info(f"Increasing weight on negative examples to reduce false positives...")
 
         weights = np.linspace(1, max_negative_weight, int(steps)).tolist()
         val_steps = np.linspace(1, steps, 20).astype(np.int16)
@@ -306,8 +306,8 @@ class Model(nn.Module):
         logging.info("#"*50 + "\nStarting training sequence 3...\n" + "#"*50)
         lr = lr/10
 
-        max_negative_weight = max_negative_weight*2
-        logging.info(f"Increasing weight on negative examples to reduce false positives...")
+        #max_negative_weight = max_negative_weight*2
+        #logging.info(f"Increasing weight on negative examples to reduce false positives...")
 
         weights = np.linspace(1, max_negative_weight, int(steps)).tolist()
         val_steps = np.linspace(1, steps, 20).astype(np.int16)
