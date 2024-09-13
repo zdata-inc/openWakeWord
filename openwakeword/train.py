@@ -325,14 +325,13 @@ class Model(nn.Module):
         logging.info("Merging checkpoints above the 90th percentile into single model...")
         accuracy_percentile = np.percentile(self.history["val_accuracy"], 90)
         recall_percentile = np.percentile(self.history["val_recall"], 90)
-        fp_percentile = np.percentile(self.history["val_fp_per_hr"], 10)
+        #fp_percentile = np.percentile(self.history["val_fp_per_hr"], 10)
 
         # Get models above the 90th percentile
         models = []
         for model, score in zip(self.best_models, self.best_model_scores):
             if score["val_accuracy"] >= accuracy_percentile and \
-                    score["val_recall"] >= recall_percentile and \
-                    score["val_fp_per_hr"] <= fp_percentile:
+                    score["val_recall"] >= recall_percentile: 
                 models.append(model)
 
         if len(models) > 0:
@@ -349,16 +348,16 @@ class Model(nn.Module):
             combined_model_recall = self.recall(val_ps, y[..., None]).detach().cpu().numpy()
             combined_model_accuracy = self.accuracy(val_ps, y[..., None].to(torch.int64)).detach().cpu().numpy()
 
-            combined_model_fp = 0
-            for batch in false_positive_val_data:
-                x_val, y_val = batch[0].to(self.device), batch[1].to(self.device)
-                val_ps = combined_model(x_val)
-                combined_model_fp += self.fp(val_ps, y_val[..., None])
-
-            combined_model_fp_per_hr = (combined_model_fp/val_set_hrs).detach().cpu().numpy()
+            #combined_model_fp = 0
+            #for batch in false_positive_val_data:
+            #    x_val, y_val = batch[0].to(self.device), batch[1].to(self.device)
+            #    val_ps = combined_model(x_val)
+            #    combined_model_fp += self.fp(val_ps, y_val[..., None])
+            #
+            #combined_model_fp_per_hr = (combined_model_fp/val_set_hrs).detach().cpu().numpy()
 
         logging.info(f"\n################\nFinal Model Accuracy: {combined_model_accuracy}"
-                     f"\nFinal Model Recall: {combined_model_recall}\nFinal Model False Positives per Hour: {combined_model_fp_per_hr}"
+                     f"\nFinal Model Recall: {combined_model_recall}"
                      "\n################\n")
 
         return combined_model
@@ -512,17 +511,17 @@ class Model(nn.Module):
                     accumulated_labels = torch.Tensor([]).to(self.device)
 
             # Run validation and log validation metrics
-            if step_ndx in val_steps and step_ndx > 1 and false_positive_val_data is not None:
-                # Get false positives per hour with false positive data
-                val_fp = 0
-                for val_step_ndx, data in enumerate(false_positive_val_data):
-                    with torch.no_grad():
-                        x_val, y_val = data[0].to(self.device), data[1].to(self.device)
-                        val_predictions = self.model(x_val)
-                        val_fp += self.fp(val_predictions, y_val[..., None])
-                val_fp_per_hr = (val_fp/val_set_hrs).detach().cpu().numpy()
-                self.history["val_fp_per_hr"].append(val_fp_per_hr)
-                writer.add_scalar("Val/fp_per_hr", val_fp_per_hr, overall_step)
+            #if step_ndx in val_steps and step_ndx > 1 and false_positive_val_data is not None:
+            #    # Get false positives per hour with false positive data
+            #    val_fp = 0
+            #    for val_step_ndx, data in enumerate(false_positive_val_data):
+            #        with torch.no_grad():
+            #            x_val, y_val = data[0].to(self.device), data[1].to(self.device)
+            #            val_predictions = self.model(x_val)
+            #            val_fp += self.fp(val_predictions, y_val[..., None])
+            #    val_fp_per_hr = (val_fp/val_set_hrs).detach().cpu().numpy()
+            #    self.history["val_fp_per_hr"].append(val_fp_per_hr)
+            #    writer.add_scalar("Val/fp_per_hr", val_fp_per_hr, overall_step)
 
             # Get recall on test clips
             if step_ndx in val_steps and step_ndx > 1 and positive_test_clips is not None:
@@ -569,8 +568,8 @@ class Model(nn.Module):
                     self.best_models.append(copy.deepcopy(self.model))
                     self.best_model_scores.append({"training_step_ndx": step_ndx, "val_n_fp": self.history["val_n_fp"][-1],
                                                    "val_recall": self.history["val_recall"][-1],
-                                                   "val_accuracy": self.history["val_accuracy"][-1],
-                                                   "val_fp_per_hr": self.history.get("val_fp_per_hr", [0])[-1]})
+                                                   "val_accuracy": self.history["val_accuracy"][-1]})
+                                                   #"val_fp_per_hr": self.history.get("val_fp_per_hr", [0])[-1]})
                     self.best_val_recall = self.history["val_recall"][-1]
                     self.best_val_accuracy = self.history["val_accuracy"][-1]
 

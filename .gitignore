@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/audioset_16k
+/my_custom*
+/koda_stop*

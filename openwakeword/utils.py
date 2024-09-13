@@ -267,7 +267,7 @@ class AudioFeatures():
             pool = ThreadPool(processes=ncpu)
 
         # Make batches
-        n_frames = int(np.ceil(x.shape[1]/160-3))
+        n_frames = int(np.ceil(x.shape[1]/160-3)) # Why minus 3? Anyway, there's ~100 mel spectrogram frames for 1s of audio, so a roughly ~10ms stride
         mel_bins = 32  # fixed by melspectrogram model
         melspecs = np.empty((x.shape[0], n_frames, mel_bins), dtype=np.float32)
         for i in range(0, max(batch_size, x.shape[0]), batch_size):
@@ -325,22 +325,22 @@ class AudioFeatures():
 
         batch = []
         ndcs = []
-        for ndx, melspec in enumerate(x):
+        for ndx, melspec in enumerate(x): # For each example in the batch
             window_size = 76
-            for i in range(0, melspec.shape[0], 8):
-                window = melspec[i:i+window_size]
+            for i in range(0, melspec.shape[0], 8): # Stepping by 8 frames 
+                window = melspec[i:i+window_size] # then each window is 76 frames. So we will get 16 windows of 76 frames with a stride of 8 frames.
                 if window.shape[0] == window_size:  # ignore windows that are too short (truncates end of clip)
                     batch.append(window)
             ndcs.append(ndx)
 
-            if len(batch) >= batch_size or ndx+1 == x.shape[0]:
+            if len(batch) >= batch_size or ndx+1 == x.shape[0]: # Here I think we're talking about batches of 16 windows in the mel spectrogram within a given training example.
                 batch = np.array(batch).astype(np.float32)
                 if "CUDA" in self.onnx_execution_provider:
                     result = self.embedding_model_predict(batch)
 
                 elif pool:
                     chunksize = batch.shape[0]//ncpu if batch.shape[0] >= ncpu else 1
-                    result = np.array(pool.map(self._get_embeddings_from_melspec,
+                    result = np.array(pool.map(self._get_embeddings_from_melspec, # Take the 16x76x32
                                       batch, chunksize=chunksize))
 
                 for j, ndx2 in zip(range(0, result.shape[0], n_frames), ndcs):
