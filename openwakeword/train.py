@@ -285,7 +285,7 @@ class Model(nn.Module):
         # Sequence 2
         logging.info("#"*50 + "\nStarting training sequence 2...\n" + "#"*50)
         lr = lr/10
-        run_2_3_steps = steps/10
+        run_2_3_steps = steps/5
 
         #max_negative_weight = max_negative_weight*2
         #logging.info(f"Increasing weight on negative examples to reduce false positives...")
