@@ -6,7 +6,9 @@ import pandas as pd
 import json
 from pathlib import Path
 from tqdm import tqdm
+import spacy
 
+nlp = spacy.load("en_core_web_sm")
 
 def apply_ssml(text: str, voice_rate: str = '100%',
                voice_pitch: str = 'default',
@@ -36,20 +38,40 @@ riva_server = "deeplearner:50051"
 auth = riva.client.Auth(uri=riva_server)
 tts_service = riva.client.SpeechSynthesisService(auth)
 
-df = pd.read_csv('raft_AXIS__final_v240821-gptq/sft.csv')
 
 utterances = []
-for i, row in df.iterrows():
-    chat = json.loads(row.chat)
-    utterances.extend([message['payload']['content'] for message in chat
-                      if message['payload']['role'] == 'assistant'])
+#df = pd.read_csv('raft_AXIS__final_v240821-gptq/sft.csv')
+#for i, row in df.iterrows():
+#    chat = json.loads(row.chat)
+##    utterances.extend([message['payload']['content'] for message in chat
+#                      if message['payload']['role'] == 'assistant'])
+#utterances = [utt for utt in utterances if not utt.startswith('\'s.:\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\.\n\\\\\\\\\\\\\\\\Walke')]
 
-utterances = [utt for utt in utterances if not utt.startswith('\'s.:\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\.\n\\\\\\\\\\\\\\\\Walke')]
+def segment_sentences(text):
+    doc = nlp(text)
+    return [sent.text.strip() for sent in doc.sents]
 
-output_dir = Path('koda_audio')
+df = pd.read_csv('chunks.csv')
+#utterances = df['text'].tolist()
+#utterances = [utt.replace('#', '' ) for utt in utterances]
+#utterances = []
+for i, chunk in tqdm(enumerate(df['text'].tolist())):
+    chunk_utts = chunk.split('\n\n')
+    for utt in chunk_utts:
+        if utt.strip() != '':
+            sentences = segment_sentences(utt.replace('#', ''))
+            utterances.extend(sentences)
+    if i > 100:
+        break
+utterances = utterances[1:]
+
+
+
+output_dir = Path('koda_audio_with_chunks')
 output_dir.mkdir(exist_ok=True, parents=True)
 
 voice: str = 'English-US.Female-1'  # 'English-US.Male-1'
+
 language_code: str = 'en-US'
 sample_rate_hz: int = 16000
 
