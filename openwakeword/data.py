@@ -797,6 +797,7 @@ class mmap_batch_generator:
         self.data_counter = {label: 0 for label in data_files.keys()}
         self.original_shapes = {label: self.data[label].shape for label in self.data.keys()}
         self.shapes = {label: self.data[label].shape for label in self.data.keys()}
+        self.epoch = 0
 
         # # Update effective shape of mmap array based on user-provided transforms (currently broken)
         # for lbl, f in self.data_transform_funcs.items():
@@ -833,6 +834,7 @@ class mmap_batch_generator:
                 # Restart at zeroth index if an array reaches the end
                 if self.data_counter[label] >= self.shapes[label][0]:
                     self.data_counter[label] = 0
+                    self.epoch += 1
 
                 # Get data from mmaped file
                 x = self.data[label][self.data_counter[label]:self.data_counter[label]+n]
@@ -856,7 +858,7 @@ class mmap_batch_generator:
                 X.append(x)
                 y.extend(y_batch)
 
-            return np.vstack(X), np.array(y)
+            return np.vstack(X), np.array(y), self.epoch
 
 
 # Function to remove empty rows from the end of a mmap array

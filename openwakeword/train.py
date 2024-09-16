@@ -131,7 +131,7 @@ class Model(nn.Module):
 
         # Define optimizer and loss
         self.loss = torch.nn.functional.binary_cross_entropy if n_classes == 1 else nn.functional.cross_entropy
-        self.optimizer = optim.Adam(self.model.parameters(), lr=0.0001)
+        self.optimizer = optim.AdamW(self.model.parameters(), lr=0.0001)
 
     def save_model(self, output_path):
         """
@@ -443,6 +443,7 @@ class Model(nn.Module):
         accumulated_predictions = torch.Tensor([]).to(self.device)
         accumulated_labels = torch.Tensor([]).to(self.device)
         for step_ndx, data in tqdm(enumerate(X, 0), total=max_steps, desc="Training"):
+            epoch = data[2]
             overall_step = overall_start_step + step_ndx
             # get the inputs; data is a list of [inputs, labels]
             x, y = data[0].to(self.device), data[1].to(self.device)
@@ -499,6 +500,7 @@ class Model(nn.Module):
                     accumulated_samples = 0
 
                     writer.add_scalar("Train/loss", loss, overall_step)
+                    writer.add_scalar("Train/epoch", epoch, overall_step)
                     self.history["loss"].append(loss.detach().cpu().numpy())
 
                     # Compute training metrics and log them
