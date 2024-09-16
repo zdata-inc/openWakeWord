@@ -1,5 +1,49 @@
 ![Github CI](https://github.com/dscripka/openWakeWord/actions/workflows/tests.yml/badge.svg)
 
+# 'Koda stop' experimentation
+
+This repo contains changes made to openWakeWord to train a wake word model to allow for Koda to respond to someone saying 'koda stop' while it is speaking. Below I summarize noteworthy pieces of information that might be relevant if trying to pick up this line of work. It's pretty quick and dirty, but may be better than having nothing to go off 6 months down the line.
+
+## Installation
+
+This was a pain. I ran into a variety of issues when running the `notebooks/automatic_model_training.ipynb` script. I have included a `requirements.txt` that hopefully can be used as a starting point to debugging what versions of dependencies actually need to be installed to get the tool working. Note, however that a lot of the issues I did face in getting that notebook to run were in the conversion of ONNX to tflite in the final cell. However, it's fine to just use ONNX so this is actually optional.
+
+Unfortunately, `notebooks/automatic_model_training.ipynb` clones it's own version of the repo so things get quite messy. The best thing to do is directly run the `train.py` script, referring to the notebook to get the datasets when setting up the `my_model.yaml`. Ignore FMA because I didn't end up using it. Instead, generate Koda audio using `synthetic_speech.py` which will require having riva installed (not in the requirements, I ran it in a different environment). As of writing, all the data needed is at `mddlbox:/home/oadams/koda-stop/openwakeword`
+
+## Experiments
+
+I did a bunch of experiments. The results are documented [here](https://docs.google.com/spreadsheets/d/1-Ux308CbmQ89BdXY8lgB1-dsDc4j2QjYtTHbcCWe9WQ/edit?gid=0#gid=0). The config used is tracked in git and is called `my_model.yaml`. Since the model name is in the config, you can search the git history to find a model in question to see the state of the code that produced it. Data is not tracked, however so if you can't access `mddlbox:/home/oadams/koda-stop/openwakeword` you'll need to regenerate the synthetic data and it will be slightly different.
+
+## Overview of changes made
+
+For the most part the git history and commit messages should give insight into what changes were made, but I'll highlight the ones that really seemed to matter here:
+- tensorboard support
+- Fixing batch loading bug where consecutive batches would use the same example
+- Decreasing signal-to-noise ratio when augmenting clips by adding background noise.
+- Added background noise of koda speaking in data augmentation.
+- When synthesizing negative adversarial examples, we do not allow words within the phrase to count as negative examples. For example, the default behaviour was that if the stop phrase is 'koda stop', then 'koda' and 'stop' in isolation are taken as negative adversarial examples. But this just seems to hurt recall too much, especially since it's natural for there to be a slight pause between 'koda' and 'stop' when a human says it, but the speech synthesis model never includes a variable pause when making positive examples.
+- Increased ratio of positive examples to negative background speech. Also increased ratio of negative adversarial examples to negative background speech.
+- Some minor changes to the prediction architecture, just increasing the hidden size.
+- Data augmentation happens with a batch size of 1 for maximum diversity. This is because batches of > 1 use all the same clip of speech and 2s segment of clip.
+
+## Promising avenues going forward
+
+Some avenues to explore:
+- Unfreeze the google embeddings so we can finetune them. I'm not super sure on this but it's possible it will be useful to get it to better handle our domain of koda speech as background noise. There are risks of overfitting though.
+- Generate more diverse background speech.
+- Clean up and refactor the oww repo.
+- use the speex noise suppression on linux
+- Tune max_negative_weight scaling.
+- Tune ratio of positive examples to negative background speech and negative adversarial examples too.
+
+## Cliffnotes on the architecture
+
+- All clips are 2s. If there is a wake word in it, it occurs roughly at the end of the clip. Everything is a mono WAV sampled at 16kHz.
+- Clips get converted to mel spectrograms: 197 frames of dimension 32. So roughly one frame per 10ms.
+- We then get 16 overlapping windows of the mel spectrogram, with each window of length 76 frames. Each of these windows is fed into the Google speech embeddings independently. So the result is 16 frames of 96 features.
+- A DNN head flattens this 16x96 and then makes a positive / negative prediction of the entire 2s frame. Doesn't that feel wrong? Yep, you have multiple independent parameters that should be the same across time, but aren't. Anyway, that's the openWakeWord default and even though RNNs are supported they didn't seem to do much better. I'm sure there are potential gains on the architecture side, though.
+- Note that at inference time, the `examples/detect_from_microphone.py` appears to feed each frame into the model for an independent prediction, but behind the scenes the model caches recent history and is in fact making a prediction on an entire 2s window.
+
 # openWakeWord
 
 openWakeWord is an open-source wakeword library that can be used to create voice-enabled applications and interfaces. It includes pre-trained models for common words & phrases that work well in real-world environments.

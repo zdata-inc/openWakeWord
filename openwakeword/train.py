@@ -611,13 +611,12 @@ if __name__ == '__main__':
         help="The path to the training config file (required)",
         type=str,
         default='my_model.yaml',
-        #required=True
     )
     parser.add_argument(
         "--generate_clips",
         help="Execute the synthetic data generation process",
         action="store_true",
-        default=True,
+        default=False,
         required=False
     )
     parser.add_argument(
