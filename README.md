@@ -44,6 +44,7 @@ Some avenues to explore:
 - A DNN head flattens this 16x96 and then makes a positive / negative prediction of the entire 2s frame. Doesn't that feel wrong? Yep, you have multiple independent parameters that should be the same across time, but aren't. Anyway, that's the openWakeWord default and even though RNNs are supported they didn't seem to do much better. I'm sure there are potential gains on the architecture side, though.
 - Note that at inference time, the `examples/detect_from_microphone.py` appears to feed each frame into the model for an independent prediction, but behind the scenes the model caches recent history and is in fact making a prediction on an entire 2s window.
 
+Below is the parent openWakeWord documentation.
 # openWakeWord
 
 openWakeWord is an open-source wakeword library that can be used to create voice-enabled applications and interfaces. It includes pre-trained models for common words & phrases that work well in real-world environments.
