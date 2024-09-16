@@ -460,11 +460,11 @@ class Model(nn.Module):
             predictions = self.model(x)
 
             # Construct batch with only samples that have high loss
-            neg_high_loss = predictions[(y == 0) & (predictions.squeeze() >= 0.001)]  # thresholds were chosen arbitrarily but work well
-            pos_high_loss = predictions[(y == 1) & (predictions.squeeze() < 0.999)]
-            y = torch.cat((y[(y == 0) & (predictions.squeeze() >= 0.001)], y[(y == 1) & (predictions.squeeze() < 0.999)]))
-            y_ = y[..., None].to(torch.float32)
-            predictions = torch.cat((neg_high_loss, pos_high_loss))
+            #neg_high_loss = predictions[(y == 0) & (predictions.squeeze() >= 0.001)]  # thresholds were chosen arbitrarily but work well
+            #pos_high_loss = predictions[(y == 1) & (predictions.squeeze() < 0.999)]
+            #y = torch.cat((y[(y == 0) & (predictions.squeeze() >= 0.001)], y[(y == 1) & (predictions.squeeze() < 0.999)]))
+            #y_ = y[..., None].to(torch.float32)
+            #predictions = torch.cat((neg_high_loss, pos_high_loss))
 
             # Set weights for batch
             if len(negative_weight_schedule) == 1:
