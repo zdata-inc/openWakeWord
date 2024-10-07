@@ -610,13 +610,13 @@ if __name__ == '__main__':
         "--training_config",
         help="The path to the training config file (required)",
         type=str,
-        default='my_model.yaml',
+        default='hey_koda.yaml',
     )
     parser.add_argument(
         "--generate_clips",
         help="Execute the synthetic data generation process",
         action="store_true",
-        default=False,
+        default=True,
         required=False
     )
     parser.add_argument(
